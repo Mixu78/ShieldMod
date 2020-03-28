@@ -2,4 +2,4 @@ newmtl palette
 Ka 0.000000 0.000000 0.000000
 Kd 0.640000 0.640000 0.640000
 d 1.000000
-map_Kd shieldmod:models/shield_sphere
+map_Kd shieldmod:models/shield/shield_sphere

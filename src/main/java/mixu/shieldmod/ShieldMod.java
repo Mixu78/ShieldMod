@@ -2,6 +2,8 @@ package mixu.shieldmod;
 
 import mixu.shieldmod.client.keybind.KeybindHandler;
 import mixu.shieldmod.event.DamageEventHandler;
+import mixu.shieldmod.handler.PlayerJoinHandler;
+import mixu.shieldmod.handler.ShieldStateHandler;
 import mixu.shieldmod.proxy.CommonProxy;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -14,11 +16,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @Mod(
-        modid = Shieldmod.MODID,
-        name = Shieldmod.MODNAME,
-        version = Shieldmod.VERSION
+        modid = ShieldMod.MODID,
+        name = ShieldMod.MODNAME,
+        version = ShieldMod.VERSION,
+        acceptableRemoteVersions = ShieldMod.VERSION
 )
-public class Shieldmod {
+public class ShieldMod {
 
     public static final String MODID = "shieldmod";
     public static final String MODNAME = "ShieldMod";
@@ -27,7 +30,7 @@ public class Shieldmod {
     public static final String KEYBIND_CATEGORY_NAME = "ShieldMod";
 
     @Mod.Instance(MODID)
-    public static Shieldmod INSTANCE;
+    public static ShieldMod INSTANCE;
 
     @SidedProxy(clientSide = "mixu.shieldmod.proxy.ClientProxy", serverSide = "mixu.shieldmod.proxy.ServerProxy")
     public static CommonProxy proxy;
@@ -55,5 +58,7 @@ public class Shieldmod {
     public void registerEventHandlers() {
         MinecraftForge.EVENT_BUS.register(new DamageEventHandler());
         MinecraftForge.EVENT_BUS.register(new KeybindHandler());
+        MinecraftForge.EVENT_BUS.register(new PlayerJoinHandler());
+        MinecraftForge.EVENT_BUS.register(new ShieldStateHandler());
     }
 }

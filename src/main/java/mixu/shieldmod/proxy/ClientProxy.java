@@ -1,10 +1,11 @@
 package mixu.shieldmod.proxy;
 
 import codechicken.lib.texture.TextureUtils;
-import mixu.shieldmod.Shieldmod;
+import mixu.shieldmod.ShieldMod;
+import mixu.shieldmod.client.gui.DrawShieldStatus;
 import mixu.shieldmod.client.keybind.Keybinds;
 import mixu.shieldmod.client.render.ShieldRender;
-import mixu.shieldmod.textures.ShieldTextureRegister;
+import mixu.shieldmod.textures.TextureRegister;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.model.obj.OBJLoader;
@@ -16,27 +17,25 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class ClientProxy extends CommonProxy {
     @Override
     public void preInit(FMLPreInitializationEvent event) {
-        OBJLoader.INSTANCE.addDomain(Shieldmod.MODID);
+        OBJLoader.INSTANCE.addDomain(ShieldMod.MODID);
 
-        TextureUtils.addIconRegister(new ShieldTextureRegister());
-        Shieldmod.logger.info("PreInit done!");
+        TextureUtils.addIconRegister(new TextureRegister());
+        ShieldMod.logger.info("PreInit done!");
     }
 
     @Override
     public void init(FMLInitializationEvent event) {
         registerEventHandlersClient();
+        initNetwork();
         Keybinds.registerKeybinds();
-        Shieldmod.logger.info("Init done!");
+        ShieldMod.logger.info("Init done!");
     }
 
     @Override
     public void postInit(FMLPostInitializationEvent event) {
-        Shieldmod.logger.info("PostInit done!");
+        ShieldMod.logger.info("PostInit done!");
     }
 
-    @Override
-    public void initNetwork() {
-    }
 
     @Override
     public EntityPlayer getLocalPlayer() {
@@ -44,6 +43,9 @@ public class ClientProxy extends CommonProxy {
     }
 
     public void registerEventHandlersClient() {
+        ShieldMod.logger.info("Registering client event handlers");
         MinecraftForge.EVENT_BUS.register(new ShieldRender());
+        MinecraftForge.EVENT_BUS.register(new DrawShieldStatus());
+        ShieldMod.logger.info("Registered client event handlers");
     }
 }
