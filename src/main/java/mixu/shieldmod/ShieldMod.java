@@ -29,6 +29,8 @@ public class ShieldMod {
     public static final String NETWORK_CHANNEL_NAME = "ShieldMod";
     public static final String KEYBIND_CATEGORY_NAME = "ShieldMod";
 
+    public static int ticksElapsedSinceStart = 0;
+
     @Mod.Instance(MODID)
     public static ShieldMod INSTANCE;
 

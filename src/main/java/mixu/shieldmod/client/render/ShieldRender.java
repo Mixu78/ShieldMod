@@ -35,6 +35,7 @@ public class ShieldRender {
 
     @SubscribeEvent
     public void onTickEnd(TickEvent.ClientTickEvent event) {
+        ShieldMod.ticksElapsedSinceStart++;
         if (localPlayer == null) {
             localPlayer = Minecraft.getMinecraft().player;
         }

@@ -3,6 +3,7 @@ package mixu.shieldmod.client.gui;
 import com.github.mixu78.mixulib.helpers.MathHelper;
 import com.github.mixu78.mixulib.lib.KVPair;
 import com.github.mixu78.mixulib.util.Colors;
+import gnu.trove.set.TFloatSet;
 import mixu.shieldmod.ShieldMod;
 import mixu.shieldmod.client.render.ShieldRender;
 import mixu.shieldmod.handler.ShieldStateHandler;
@@ -24,6 +25,7 @@ public class DrawShieldStatus extends Gui{
 
     private static ResourceLocation shieldHealthbar = new ResourceLocation(ShieldMod.MODID, "textures/gui/shield_health_bar.png");
     int ticksElapsed = 0;
+    boolean isAnimatingAlpha = false;
 
     @SubscribeEvent
     public void onRenderExpBar(RenderGameOverlayEvent.Post event) {
@@ -37,20 +39,25 @@ public class DrawShieldStatus extends Gui{
         float b = ((float) uuidRGB.getBlue())/255F;
         float a = 1F;
 
+        float max = 1F;
+        float min = 0.5F;
+        float t = ShieldMod.ticksElapsedSinceStart/10F;
+
         if (!ShieldRender.playerShields.containsKey((EntityPlayer) localPlayer)) {
             ShieldRender.playerShields.put((EntityPlayer) localPlayer, new KVPair<>(ShieldStateHandler.ShieldStates.DISABLED, 1F));
         }
 
-        if (ShieldRender.playerShields.get(localPlayer).getKey() == ShieldStateHandler.ShieldStates.BROKEN) {
+        if (ShieldRender.playerShields.get(localPlayer).getKey() == ShieldStateHandler.ShieldStates.BROKEN || isAnimatingAlpha) {
             r = 0.5F;
             g = 0f;
             b = 0F;
-            a = 1F;
+            a = (float) ((max - min) * Math.sin(t) + max + min) / 2;
+            isAnimatingAlpha = a >= 0.9F;
         }
 
         ScaledResolution scaled = new ScaledResolution(Minecraft.getMinecraft());
 
-        int xPos = 239/2560*scaled.getScaledWidth();
+        int xPos = 239/2560*scaled.getScaledWidth(); //Maybe useless?
         int yPos = 10/2560*scaled.getScaledHeight()+scaled.getScaledHeight()-10;
 
         Minecraft mc = Minecraft.getMinecraft();
@@ -74,6 +81,7 @@ public class DrawShieldStatus extends Gui{
         //Back to normal colors
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         if (ticksElapsed >= 10 && (int)((ShieldRender.localPlayerShieldSize / 1F)*100) <= 50) {
+            //Draw big "!" when shield health < 50%
             drawTexturedModalRect(xPos, yPos - 30, 62, 0, 7, 19);
         }
 
