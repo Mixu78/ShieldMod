@@ -6,8 +6,9 @@ import com.github.mixu78.mixulib.network.ExecMainThreadMessageHandler;
 import io.netty.buffer.ByteBuf;
 import mixu.shieldmod.ShieldMod;
 import mixu.shieldmod.client.render.ShieldRender;
+import mixu.shieldmod.config.SMConfig;
 import mixu.shieldmod.handler.ShieldStateHandler;
-import mixu.shieldmod.handler.ShieldStateHandler.ShieldStates;
+import mixu.shieldmod.handler.ShieldStateHandler.ShieldState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -17,21 +18,21 @@ import net.minecraftforge.fml.relauncher.Side;
 
 public class PacketShieldStateUpdated implements IMessage {
 
-    private ShieldStates state;
+    private ShieldState state;
     private int playerID;
     private boolean hasPlayer;
     private float health;
 
     public PacketShieldStateUpdated() {}
 
-    public PacketShieldStateUpdated(ShieldStates state) {
+    public PacketShieldStateUpdated(ShieldState state) {
         this.state = state;
         this.playerID = 0;
         this.hasPlayer = false;
         this.health = 100F;
     }
 
-    public PacketShieldStateUpdated(ShieldStates state, EntityPlayer player, float health) {
+    public PacketShieldStateUpdated(ShieldState state, EntityPlayer player, float health) {
         this.state = state;
         this.playerID = player.getEntityId();
         this.hasPlayer = true;
@@ -40,7 +41,7 @@ public class PacketShieldStateUpdated implements IMessage {
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        state = ShieldStates.getByID(buf.readInt());
+        state = ShieldState.getByID(buf.readInt());
         playerID = buf.readInt();
         hasPlayer = buf.readBoolean();
         health = buf.readFloat();
@@ -79,9 +80,12 @@ public class PacketShieldStateUpdated implements IMessage {
                 //Packet to server
             } else {
                 //Check if shield broken, broken shield cannot be changed to enabled/disabled by client
-                if (ShieldStateHandler.shieldStates.get(ctx.getServerHandler().player).getKey() == ShieldStates.BROKEN) {message.state = ShieldStates.BROKEN;}
+                if (ShieldStateHandler.shieldStates.get(ctx.getServerHandler().player).getKey() == ShieldState.BROKEN) {message.state = ShieldState.BROKEN;}
                 //Set server-sided state
                 ShieldStateHandler.shieldStates.get(ctx.getServerHandler().player).setKey(message.state);
+                if (message.state == ShieldState.DISABLED) {
+                    ShieldStateHandler.parryTime.replace(ctx.getServerHandler().player, SMConfig.ShieldProperties.parryTime);
+                }
                 EntityPlayer player = ctx.getServerHandler().player;
                 //Send to all players rendering updated player a packet that state&health has been updated for sender player
                 ShieldMod.network.sendTo(new PacketShieldStateUpdated(message.state, player, ShieldStateHandler.shieldStates.get(ctx.getServerHandler().player).getValue()), (EntityPlayerMP) player);

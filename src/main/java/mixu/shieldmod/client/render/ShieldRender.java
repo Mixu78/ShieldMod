@@ -9,12 +9,14 @@ import com.github.mixu78.mixulib.render.ModelRenderer;
 import com.github.mixu78.mixulib.util.Colors;
 import com.google.common.collect.Maps;
 import mixu.shieldmod.ShieldMod;
+import mixu.shieldmod.config.SMConfig;
 import mixu.shieldmod.handler.ShieldStateHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderPlayerEvent;
@@ -28,7 +30,7 @@ import java.util.Map;
 
 @SideOnly(Side.CLIENT)
 public class ShieldRender {
-    public static Map<EntityPlayer, KVPair<ShieldStateHandler.ShieldStates, Float>> playerShields = Maps.newHashMap();
+    public static Map<EntityPlayer, KVPair<ShieldStateHandler.ShieldState, Float>> playerShields = Maps.newHashMap();
     public static float localPlayerShieldSize;
     public static IBakedModel shieldModel;
     private static EntityPlayer localPlayer = null;
@@ -46,20 +48,21 @@ public class ShieldRender {
 
         //If client is not in shields list
         if (!playerShields.containsKey((EntityPlayer) localPlayer)) {
-            playerShields.put((EntityPlayer) localPlayer, new KVPair<>(ShieldStateHandler.ShieldStates.DISABLED, 1F));
+            playerShields.put((EntityPlayer) localPlayer, new KVPair<>(ShieldStateHandler.ShieldState.DISABLED, 1F));
         }
-    if (Minecraft.getMinecraft().isGamePaused() && Minecraft.getMinecraft().isIntegratedServerRunning()) return;
-        //For each enabled shield, decrease by 0.005F. For each disabled shield, increase by 0.005F until hitting 1F
-        playerShields.forEach((player, stateAndHealth) -> {
-            if (stateAndHealth.getKey() == ShieldStateHandler.ShieldStates.ENABLED) {
-                stateAndHealth.setValue(stateAndHealth.getValue() - 0.005F);
-            }
-            else if (stateAndHealth.getKey() == ShieldStateHandler.ShieldStates.DISABLED) {
-                stateAndHealth.setValue(stateAndHealth.getValue() >= 1F ? 1F : stateAndHealth.getValue() + 0.005F);
-            } else if (stateAndHealth.getKey() == ShieldStateHandler.ShieldStates.BROKEN) {
-                stateAndHealth.setValue(stateAndHealth.getValue() >= 1F ? 1F : stateAndHealth.getValue() + 0.005F);
-            }
-        });
+
+        if (Minecraft.getMinecraft().isGamePaused() && Minecraft.getMinecraft().isIntegratedServerRunning()) return;
+            //For each enabled shield, decrease by usageDamageRate. For each disabled shield, increase by regenRate until hitting 1F.
+            playerShields.forEach((player, stateAndHealth) -> {
+                if (stateAndHealth.getKey() == ShieldStateHandler.ShieldState.ENABLED) {
+                    stateAndHealth.setValue((float) (stateAndHealth.getValue() - SMConfig.ShieldProperties.usageDamageRate));
+                }
+                else if (stateAndHealth.getKey() == ShieldStateHandler.ShieldState.DISABLED) {
+                    stateAndHealth.setValue(stateAndHealth.getValue() >= 1F ? 1F : (float) (stateAndHealth.getValue() + SMConfig.ShieldProperties.regenRate));
+                } else if (stateAndHealth.getKey() == ShieldStateHandler.ShieldState.BROKEN) {
+                    stateAndHealth.setValue(stateAndHealth.getValue() >= 1F ? 1F : (float) (stateAndHealth.getValue() + SMConfig.ShieldProperties.regenRate));
+                }
+            });
         localPlayerShieldSize = playerShields.get(localPlayer).getValue();
     }
 
@@ -67,7 +70,7 @@ public class ShieldRender {
     public void renderPlayerPost(RenderPlayerEvent.Post event) {
 
         if (!playerShields.containsKey((EntityPlayer) event.getEntityPlayer())) {
-            playerShields.put((EntityPlayer) event.getEntityPlayer(), new KVPair<>(ShieldStateHandler.ShieldStates.DISABLED, 1F));
+            playerShields.put((EntityPlayer) event.getEntityPlayer(), new KVPair<>(ShieldStateHandler.ShieldState.DISABLED, 1F));
         }
 
         //Load the shield object
@@ -81,9 +84,10 @@ public class ShieldRender {
             }
         }
         //If shield is broken/disabled/unknown, stop
-        if (!playerShields.get((EntityPlayer) event.getEntityPlayer()).getKey().equals(ShieldStateHandler.ShieldStates.ENABLED)) {
+        if (!playerShields.get((EntityPlayer) event.getEntityPlayer()).getKey().equals(ShieldStateHandler.ShieldState.ENABLED)) {
             return;
         }
+
         //Just in case shieldModel is null for some wack reason
         if (shieldModel == null) {
             return;
@@ -106,7 +110,7 @@ public class ShieldRender {
         }
 
         //Translate to the center of player being rendered
-        RenderHelper.translateToPlayerCenter((EntityPlayer) event.getEntityPlayer(), (EntityPlayer) localPlayer, event.getPartialRenderTick());
+        RenderHelper.translateToPlayerCenter(event.getEntityPlayer(), localPlayer, event.getPartialRenderTick());
 
         GlStateManager.scale(playerShieldSize, playerShieldSize, playerShieldSize);
 

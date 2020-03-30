@@ -4,13 +4,18 @@ import mixu.shieldmod.client.keybind.KeybindHandler;
 import mixu.shieldmod.event.DamageEventHandler;
 import mixu.shieldmod.handler.PlayerJoinHandler;
 import mixu.shieldmod.handler.ShieldStateHandler;
+import mixu.shieldmod.potion.PotionRegisterer;
 import mixu.shieldmod.proxy.CommonProxy;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.Config;
+import net.minecraftforge.common.config.ConfigManager;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,6 +49,8 @@ public class ShieldMod {
     public void preInit(FMLPreInitializationEvent event) {
         logger = LogManager.getLogger(MODNAME);
         proxy.preInit(event);
+        MinecraftForge.EVENT_BUS.register(new PotionRegisterer());
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     @Mod.EventHandler
@@ -55,6 +62,15 @@ public class ShieldMod {
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         proxy.postInit(event);
+    }
+
+    @SubscribeEvent
+    public void onConfigChangedEvent(ConfigChangedEvent.OnConfigChangedEvent event)
+    {
+        if (event.getModID().equals(MODID))
+        {
+            ConfigManager.sync(MODID, Config.Type.INSTANCE);
+        }
     }
 
     public void registerEventHandlers() {

@@ -1,11 +1,10 @@
 package mixu.shieldmod.client.gui;
 
-import com.github.mixu78.mixulib.helpers.MathHelper;
 import com.github.mixu78.mixulib.lib.KVPair;
 import com.github.mixu78.mixulib.util.Colors;
-import gnu.trove.set.TFloatSet;
 import mixu.shieldmod.ShieldMod;
 import mixu.shieldmod.client.render.ShieldRender;
+import mixu.shieldmod.config.SMConfig;
 import mixu.shieldmod.handler.ShieldStateHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -13,7 +12,6 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Timer;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -21,7 +19,7 @@ import net.minecraftforge.fml.relauncher.Side;
 
 import java.awt.*;
 
-public class DrawShieldStatus extends Gui{
+public class DrawShieldStatus extends Gui {
 
     private static ResourceLocation shieldHealthbar = new ResourceLocation(ShieldMod.MODID, "textures/gui/shield_health_bar.png");
     int ticksElapsed = 0;
@@ -29,6 +27,9 @@ public class DrawShieldStatus extends Gui{
 
     @SubscribeEvent
     public void onRenderExpBar(RenderGameOverlayEvent.Post event) {
+        //Don't draw overlay if disabled
+        if (!SMConfig.Overlay.enabled) return;
+
         EntityPlayer localPlayer = Minecraft.getMinecraft().player;
         if (event.getType() != RenderGameOverlayEvent.ElementType.EXPERIENCE) return;
 
@@ -44,10 +45,10 @@ public class DrawShieldStatus extends Gui{
         float t = ShieldMod.ticksElapsedSinceStart/10F;
 
         if (!ShieldRender.playerShields.containsKey((EntityPlayer) localPlayer)) {
-            ShieldRender.playerShields.put((EntityPlayer) localPlayer, new KVPair<>(ShieldStateHandler.ShieldStates.DISABLED, 1F));
+            ShieldRender.playerShields.put((EntityPlayer) localPlayer, new KVPair<>(ShieldStateHandler.ShieldState.DISABLED, 1F));
         }
 
-        if (ShieldRender.playerShields.get(localPlayer).getKey() == ShieldStateHandler.ShieldStates.BROKEN || isAnimatingAlpha) {
+        if (ShieldRender.playerShields.get(localPlayer).getKey() == ShieldStateHandler.ShieldState.BROKEN || isAnimatingAlpha) {
             r = 0.5F;
             g = 0f;
             b = 0F;
@@ -89,7 +90,7 @@ public class DrawShieldStatus extends Gui{
             ticksElapsed = 0;
         }
 
-        String s = "Shield health: " + Math.round((double) ShieldRender.localPlayerShieldSize*20D) + "/" + "20";
+        String s = "Shield health: " + Math.round((double) ShieldRender.localPlayerShieldSize*20D) + "/" + SMConfig.ShieldProperties.shieldHealthMax;
         yPos -= 10;
         mc.fontRenderer.drawString(s, xPos, yPos, 0);
         GlStateManager.popAttrib();

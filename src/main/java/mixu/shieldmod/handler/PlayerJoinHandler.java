@@ -8,6 +8,7 @@ public class PlayerJoinHandler {
     @SubscribeEvent
     public void onPlayerJoined(PlayerEvent.PlayerLoggedInEvent event) {
         //When a player joins server, add them to the shieldStates table
-        ShieldStateHandler.shieldStates.put(event.player, new KVPair<>(ShieldStateHandler.ShieldStates.DISABLED, 1F));
+        ShieldStateHandler.shieldStates.put(event.player, new KVPair<>(ShieldStateHandler.ShieldState.DISABLED, 1F));
+        ShieldStateHandler.parryTime.put(event.player, 0);
     }
 }
